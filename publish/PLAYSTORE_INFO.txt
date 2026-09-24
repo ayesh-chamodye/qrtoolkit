@@ -1,0 +1,25 @@
+# QR ToolKit - Play Store Release Info
+# IMPORTANT: Keep this file and the keystore in a secure location.
+
+# Keystore Info
+Keystore Location: publish/qrtoolkit-release.jks
+Keystore Password: Qrtoolkit@123
+Key Alias: qrtoolkit_release
+Key Password: Qrtoolkit@123
+Signing Algorithm: RSA 2048
+Validity: 10000 days
+
+# Play Store Info
+Application ID: com.ayesh.dev.qrtoolkit.qrtoolkit
+App Name: QR ToolKit
+Version: 1.0.0 (Build 1)
+
+# Build Info
+Build Type: Release App Bundle (AAB)
+Output File: publish/qrtoolkit-release.aab
+Build Command: flutter build appbundle --release
+
+# Notes
+# 1. Never commit the keystore or passwords to version control
+# 2. Backup the keystore to a secure location
+# 3. Update versionCode and versionName in pubspec.yaml before rebuilding

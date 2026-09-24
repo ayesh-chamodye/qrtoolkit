@@ -31,9 +31,16 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.create("release").apply {
+                storeFile = file("../../publish/qrtoolkit-release.jks")
+                storePassword = "Qrtoolkit@123"
+                keyAlias = "qrtoolkit_release"
+                keyPassword = "Qrtoolkit@123"
+            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            isDebuggable = false
+            isZipAlignEnabled = true
         }
     }
 }
