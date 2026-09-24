@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -28,7 +27,7 @@ class HistoryPage extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_sweep),
+            icon: const Icon(Icons.delete_sweep_rounded),
             tooltip: 'Clear history',
             onPressed: () => _confirmClear(context),
           ),
@@ -38,43 +37,120 @@ class HistoryPage extends StatelessWidget {
         valueListenable: Hive.box<ScanItem>('history').listenable(),
         builder: (context, Box<ScanItem> box, _) {
           if (box.values.isEmpty) {
-            return const Center(child: Text('No history yet'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    ),
+                    child: Icon(
+                      Icons.history_rounded,
+                      size: 56,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No History Yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Scanned and generated QR codes will appear here',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
 
           final historyList = box.values.toList().reversed.toList();
 
-          return ListView.builder(
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            physics: const BouncingScrollPhysics(),
             itemCount: historyList.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final item = historyList[index];
               final result = QrParser.parse(item.content);
+              final Color typeColor = _getColorForType(result.type);
 
-              return ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: _getColorForType(result.type).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    _getIconForType(result.type),
-                    color: _getColorForType(result.type),
+              return Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.08),
+                    width: 1,
                   ),
                 ),
-                title: Text(
-                  item.content,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                child: Material(
+                  color: Colors.transparent,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    leading: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: typeColor.withOpacity(0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _getIconForType(result.type),
+                        color: typeColor,
+                        size: 22,
+                      ),
+                    ),
+                    title: Text(
+                      item.content,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        '${_getTitleForType(result.type)} • '
+                        '${DateFormat('MMM dd, yyyy HH:mm').format(item.dateTime)}',
+                        style: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    trailing: IconButton(
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.grey.shade400,
+                        size: 20,
+                      ),
+                      onPressed: () => item.delete(),
+                    ),
+                    onTap: () => _showDetails(context, item, result),
+                  ),
                 ),
-                subtitle: Text(
-                  '${_getTitleForType(result.type)} • '
-                  '${DateFormat('yyyy-MM-dd HH:mm').format(item.dateTime)}',
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => item.delete(),
-                ),
-                onTap: () => _showDetails(context, item, result),
               );
             },
           );
@@ -87,15 +163,26 @@ class HistoryPage extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Clear history?'),
-        content: const Text('This will remove every saved item.'),
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
+        title: const Text('Clear history?', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'This will permanently remove every saved item.',
+          style: TextStyle(color: Colors.grey.shade300),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey.shade400)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+            ),
             child: const Text('Clear'),
           ),
         ],
@@ -113,38 +200,38 @@ class HistoryPage extends StatelessWidget {
   IconData _getIconForType(QrType type) {
     switch (type) {
       case QrType.url:
-        return Icons.language;
+        return Icons.language_rounded;
       case QrType.phone:
-        return Icons.phone;
+        return Icons.phone_rounded;
       case QrType.email:
-        return Icons.email;
+        return Icons.email_rounded;
       case QrType.sms:
-        return Icons.sms;
+        return Icons.sms_rounded;
       case QrType.wifi:
-        return Icons.wifi;
+        return Icons.wifi_rounded;
       case QrType.location:
-        return Icons.location_on;
+        return Icons.location_on_rounded;
       default:
-        return Icons.text_fields;
+        return Icons.text_fields_rounded;
     }
   }
 
   Color _getColorForType(QrType type) {
     switch (type) {
       case QrType.url:
-        return Colors.blue;
+        return const Color(0xFF3B82F6);
       case QrType.phone:
-        return Colors.green;
+        return const Color(0xFF10B981);
       case QrType.email:
-        return Colors.red;
+        return const Color(0xFFEF4444);
       case QrType.sms:
-        return Colors.orange;
+        return const Color(0xFFF59E0B);
       case QrType.wifi:
-        return Colors.purple;
+        return const Color(0xFF8B5CF6);
       case QrType.location:
-        return Colors.teal;
+        return const Color(0xFF06B6D4);
       default:
-        return Colors.grey;
+        return const Color(0xFF6366F1);
     }
   }
 
@@ -171,7 +258,6 @@ class HistoryPage extends StatelessWidget {
   // QR capture / export
   // ---------------------------------------------------------------------------
 
-  /// Captures the already-rendered QR widget behind [key] as PNG bytes.
   static Future<Uint8List?> _captureQrImage(
     GlobalKey key, {
     int retries = 3,
@@ -183,7 +269,7 @@ class HistoryPage extends StatelessWidget {
 
       if (boundary.debugNeedsPaint && retries > 0) {
         await Future.delayed(const Duration(milliseconds: 30));
-        return _captureQrImage(key, retries: retries - 1);
+        return await _captureQrImage(key, retries: retries - 1);
       }
 
       final ui.Image image = await boundary.toImage(pixelRatio: 4.0);
@@ -197,7 +283,6 @@ class HistoryPage extends StatelessWidget {
     }
   }
 
-  /// Captures, cleans up old temp files, writes a fresh PNG, returns its path.
   static Future<String?> _saveQrToTempFile(GlobalKey key) async {
     final bytes = await _captureQrImage(key);
     if (bytes == null) return null;
@@ -219,9 +304,7 @@ class HistoryPage extends StatelessWidget {
           await entity.delete();
         }
       }
-    } catch (_) {
-      // Best effort cleanup.
-    }
+    } catch (_) {}
   }
 
   static void _snack(BuildContext context, String message) {
@@ -302,14 +385,19 @@ class HistoryPage extends StatelessWidget {
           }
 
           return AlertDialog(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            backgroundColor: const Color(0xFF1E293B),
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Colors.white.withOpacity(0.1)),
+            ),
             title: Text(
               _getTitleForType(result.type),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             content: SizedBox(
               width: double.maxFinite,
@@ -322,46 +410,43 @@ class HistoryPage extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: QrImageView(
                         data: item.content,
                         version: QrVersions.auto,
-                        size: 200.0,
+                        size: 190.0,
                         backgroundColor: Colors.white,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(10),
+                      color: const Color(0xFF0F172A),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.08)),
                     ),
                     child: SelectableText(
                       item.content,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   if (busy)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
+                      child: CircularProgressIndicator(),
                     )
                   else
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.copy),
+                          icon: const Icon(Icons.copy_rounded, color: Color(0xFF818CF8)),
                           tooltip: 'Copy',
                           onPressed: () {
                             Clipboard.setData(
@@ -371,18 +456,18 @@ class HistoryPage extends StatelessWidget {
                           },
                         ),
                         IconButton(
-                          icon: Icon(_getActionIcon(result.type)),
+                          icon: Icon(_getActionIcon(result.type), color: const Color(0xFF818CF8)),
                           tooltip: 'Open',
                           onPressed: () => _performAction(dialogContext, result),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.share),
+                          icon: const Icon(Icons.share_rounded, color: Color(0xFF818CF8)),
                           tooltip: 'Share QR',
                           onPressed: () =>
                               run(() => _shareQr(dialogContext, qrKey)),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.save_alt),
+                          icon: const Icon(Icons.save_alt_rounded, color: Color(0xFF818CF8)),
                           tooltip: 'Save to Gallery',
                           onPressed: () =>
                               run(() => _saveQrToGallery(dialogContext, qrKey)),
@@ -395,6 +480,9 @@ class HistoryPage extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.grey.shade400,
+                ),
                 child: const Text('Close'),
               ),
             ],
@@ -411,17 +499,17 @@ class HistoryPage extends StatelessWidget {
   IconData _getActionIcon(QrType type) {
     switch (type) {
       case QrType.url:
-        return Icons.open_in_new;
+        return Icons.open_in_new_rounded;
       case QrType.phone:
-        return Icons.call;
+        return Icons.call_rounded;
       case QrType.email:
-        return Icons.send;
+        return Icons.send_rounded;
       case QrType.sms:
-        return Icons.message;
+        return Icons.message_rounded;
       case QrType.location:
-        return Icons.map;
+        return Icons.map_rounded;
       default:
-        return Icons.open_in_new;
+        return Icons.open_in_new_rounded;
     }
   }
 

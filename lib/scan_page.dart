@@ -34,7 +34,6 @@ class _ScanPageState extends State<ScanPage> {
 
   @override
   void dispose() {
-    controller?.dispose();
     super.dispose();
   }
 
@@ -73,28 +72,83 @@ class _ScanPageState extends State<ScanPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: Colors.white.withOpacity(0.1)),
+        ),
         title: Row(
           children: [
-            Icon(_getIconForType(result.type), color: _getColorForType(result.type)),
-            const SizedBox(width: 10),
-            Text(_getTitleForType(result.type)),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _getColorForType(result.type).withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                _getIconForType(result.type),
+                color: _getColorForType(result.type),
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _getTitleForType(result.type),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Scanned Content:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(
+              'Scanned Content:',
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 8),
-            SelectableText(result.rawValue),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.08)),
+              ),
+              child: SelectableText(
+                result.rawValue,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ],
         ),
         actions: [
-          TextButton(
+          ElevatedButton(
             onPressed: () => _performAction(result),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             child: Text(_getActionLabel(result.type)),
           ),
-          TextButton(
+          OutlinedButton(
             onPressed: () {
               Navigator.pop(context);
               setState(() {
@@ -102,6 +156,13 @@ class _ScanPageState extends State<ScanPage> {
               });
               controller?.resumeCamera();
             },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white.withOpacity(0.2)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
             child: const Text('Scan Again'),
           ),
           TextButton(
@@ -109,6 +170,9 @@ class _ScanPageState extends State<ScanPage> {
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Go back to Home
             },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey.shade400,
+            ),
             child: const Text('Close'),
           ),
         ],
@@ -118,25 +182,25 @@ class _ScanPageState extends State<ScanPage> {
 
   IconData _getIconForType(QrType type) {
     switch (type) {
-      case QrType.url: return Icons.language;
-      case QrType.phone: return Icons.phone;
-      case QrType.email: return Icons.email;
-      case QrType.sms: return Icons.sms;
-      case QrType.wifi: return Icons.wifi;
-      case QrType.location: return Icons.location_on;
-      default: return Icons.text_fields;
+      case QrType.url: return Icons.language_rounded;
+      case QrType.phone: return Icons.phone_rounded;
+      case QrType.email: return Icons.email_rounded;
+      case QrType.sms: return Icons.sms_rounded;
+      case QrType.wifi: return Icons.wifi_rounded;
+      case QrType.location: return Icons.location_on_rounded;
+      default: return Icons.text_fields_rounded;
     }
   }
 
   Color _getColorForType(QrType type) {
     switch (type) {
-      case QrType.url: return Colors.blue;
-      case QrType.phone: return Colors.green;
-      case QrType.email: return Colors.red;
-      case QrType.sms: return Colors.orange;
-      case QrType.wifi: return Colors.purple;
-      case QrType.location: return Colors.teal;
-      default: return Colors.grey;
+      case QrType.url: return const Color(0xFF3B82F6);
+      case QrType.phone: return const Color(0xFF10B981);
+      case QrType.email: return const Color(0xFFEF4444);
+      case QrType.sms: return const Color(0xFFF59E0B);
+      case QrType.wifi: return const Color(0xFF8B5CF6);
+      case QrType.location: return const Color(0xFF06B6D4);
+      default: return const Color(0xFF6366F1);
     }
   }
 
@@ -193,7 +257,7 @@ class _ScanPageState extends State<ScanPage> {
         title: const Text('Scan QR Code'),
         actions: [
           IconButton(
-            icon: Icon(_isFlashOn ? Icons.flash_on : Icons.flash_off),
+            icon: Icon(_isFlashOn ? Icons.flash_on_rounded : Icons.flash_off_rounded),
             onPressed: () async {
               await controller?.toggleFlash();
               final flashState = await controller?.getFlashStatus();
@@ -203,23 +267,57 @@ class _ScanPageState extends State<ScanPage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.cameraswitch),
+            icon: const Icon(Icons.cameraswitch_rounded),
             onPressed: () async {
               await controller?.flipCamera();
             },
           ),
         ],
       ),
-      body: QRView(
-        key: qrKey,
-        onQRViewCreated: _onQRViewCreated,
-        overlay: QrScannerOverlayShape(
-          borderColor: Theme.of(context).primaryColor,
-          borderRadius: 12,
-          borderLength: 30,
-          borderWidth: 8,
-          cutOutSize: 250,
-        ),
+      body: Stack(
+        children: [
+          QRView(
+            key: qrKey,
+            onQRViewCreated: _onQRViewCreated,
+            overlay: QrScannerOverlayShape(
+              borderColor: const Color(0xFF6366F1),
+              borderRadius: 16,
+              borderLength: 35,
+              borderWidth: 8,
+              cutOutSize: 260,
+            ),
+          ),
+          Positioned(
+            bottom: 40,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B).withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(color: Colors.white.withOpacity(0.12)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.center_focus_weak_rounded, color: Color(0xFF818CF8), size: 18),
+                    SizedBox(width: 8),
+                    Text(
+                      'Align QR code within frame',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

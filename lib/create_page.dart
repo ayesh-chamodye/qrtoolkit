@@ -32,35 +32,33 @@ class _CreatePageState extends State<CreatePage> {
   final TextEditingController _c6 = TextEditingController();
   final TextEditingController _c7 = TextEditingController();
 
-  /// Key attached to the RepaintBoundary wrapping the on-screen QR code.
-  /// Lets us capture exactly what the user sees, with no second render pass.
   final GlobalKey _qrKey = GlobalKey();
 
   String _qrData = '';
   bool _busy = false;
 
   final List<Map<String, dynamic>> _qrTypes = [
-    {'name': 'Text', 'icon': Icons.text_fields, 'cat': '📝 Basic'},
-    {'name': 'URL', 'icon': Icons.language, 'cat': '🌐 Web'},
-    {'name': 'Phone', 'icon': Icons.phone, 'cat': '📱 Contact'},
-    {'name': 'vCard', 'icon': Icons.contact_page, 'cat': '👤 Contact'},
-    {'name': 'Email', 'icon': Icons.email, 'cat': '✉️ Communication'},
-    {'name': 'SMS', 'icon': Icons.sms, 'cat': '💬 Communication'},
-    {'name': 'Wi-Fi', 'icon': Icons.wifi, 'cat': '📶 Network'},
-    {'name': 'Location', 'icon': Icons.location_on, 'cat': '📍 Location'},
-    {'name': 'Event', 'icon': Icons.event, 'cat': '📅 Events'},
-    {'name': 'UPI', 'icon': Icons.account_balance_wallet, 'cat': '💳 Payment'},
-    {'name': 'Crypto', 'icon': Icons.currency_bitcoin, 'cat': '💰 Payment'},
-    {'name': 'WhatsApp', 'icon': Icons.chat, 'cat': '💬 Social'},
-    {'name': 'Telegram', 'icon': Icons.telegram, 'cat': '💬 Social'},
-    {'name': 'Instagram', 'icon': Icons.camera_alt, 'cat': '📸 Social'},
-    {'name': 'Facebook', 'icon': Icons.facebook, 'cat': '👤 Social'},
-    {'name': 'LinkedIn', 'icon': Icons.work, 'cat': '💼 Social'},
-    {'name': 'Twitter/X', 'icon': Icons.close, 'cat': '🐦 Social'},
-    {'name': 'Spotify', 'icon': Icons.music_note, 'cat': '🎵 Media'},
-    {'name': 'YouTube', 'icon': Icons.play_circle, 'cat': '▶️ Media'},
-    {'name': 'GitHub', 'icon': Icons.code, 'cat': '💻 Developer'},
-    {'name': 'Maps', 'icon': Icons.map, 'cat': '🗺️ Maps'},
+    {'name': 'Text', 'icon': Icons.text_fields_rounded, 'cat': '📝 Basic', 'color': Color(0xFF6366F1)},
+    {'name': 'URL', 'icon': Icons.language_rounded, 'cat': '🌐 Web', 'color': Color(0xFF3B82F6)},
+    {'name': 'Phone', 'icon': Icons.phone_rounded, 'cat': '📱 Contact', 'color': Color(0xFF10B981)},
+    {'name': 'vCard', 'icon': Icons.contact_page_rounded, 'cat': '👤 Contact', 'color': Color(0xFF14B8A6)},
+    {'name': 'Email', 'icon': Icons.email_rounded, 'cat': '✉️ Comm', 'color': Color(0xFFEF4444)},
+    {'name': 'SMS', 'icon': Icons.sms_rounded, 'cat': '💬 Comm', 'color': Color(0xFFF59E0B)},
+    {'name': 'Wi-Fi', 'icon': Icons.wifi_rounded, 'cat': '📶 Network', 'color': Color(0xFF8B5CF6)},
+    {'name': 'Location', 'icon': Icons.location_on_rounded, 'cat': '📍 Map', 'color': Color(0xFF06B6D4)},
+    {'name': 'Event', 'icon': Icons.event_rounded, 'cat': '📅 Calendar', 'color': Color(0xFFEC4899)},
+    {'name': 'UPI', 'icon': Icons.account_balance_wallet_rounded, 'cat': '💳 Pay', 'color': Color(0xFF10B981)},
+    {'name': 'Crypto', 'icon': Icons.currency_bitcoin_rounded, 'cat': '💰 Pay', 'color': Color(0xFFF59E0B)},
+    {'name': 'WhatsApp', 'icon': Icons.chat_rounded, 'cat': '💬 Social', 'color': Color(0xFF22C55E)},
+    {'name': 'Telegram', 'icon': Icons.telegram_rounded, 'cat': '💬 Social', 'color': Color(0xFF0EA5E9)},
+    {'name': 'Instagram', 'icon': Icons.camera_alt_rounded, 'cat': '📸 Social', 'color': Color(0xFFE1306C)},
+    {'name': 'Facebook', 'icon': Icons.facebook_rounded, 'cat': '👤 Social', 'color': Color(0xFF1877F2)},
+    {'name': 'LinkedIn', 'icon': Icons.work_rounded, 'cat': '💼 Social', 'color': Color(0xFF0A66C2)},
+    {'name': 'Twitter/X', 'icon': Icons.close_rounded, 'cat': '🐦 Social', 'color': Color(0xFF64748B)},
+    {'name': 'Spotify', 'icon': Icons.music_note_rounded, 'cat': '🎵 Media', 'color': Color(0xFF1DB954)},
+    {'name': 'YouTube', 'icon': Icons.play_circle_rounded, 'cat': '▶️ Media', 'color': Color(0xFFFF0000)},
+    {'name': 'GitHub', 'icon': Icons.code_rounded, 'cat': '💻 Dev', 'color': Color(0xFF94A3B8)},
+    {'name': 'Maps', 'icon': Icons.map_rounded, 'cat': '🗺️ Navigation', 'color': Color(0xFF06B6D4)},
   ];
 
   @override
@@ -79,24 +77,21 @@ class _CreatePageState extends State<CreatePage> {
   // QR capture / export
   // ---------------------------------------------------------------------------
 
-  /// Captures the already-rendered QR widget as PNG bytes.
-  /// No QrPainter / PictureRecorder second pass needed.
   Future<Uint8List?> _captureQrImage({int retries = 3}) async {
     try {
       final boundary =
           _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) return null;
 
-      // If a repaint is still pending, wait a frame and try again.
       if (boundary.debugNeedsPaint && retries > 0) {
         await Future.delayed(const Duration(milliseconds: 30));
-        return _captureQrImage(retries: retries - 1);
+        return await _captureQrImage(retries: retries - 1);
       }
 
       final ui.Image image = await boundary.toImage(pixelRatio: 4.0);
       final ByteData? byteData =
           await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose(); // free native memory
+      image.dispose();
       return byteData?.buffer.asUint8List();
     } catch (e) {
       debugPrint('QR capture failed: $e');
@@ -104,8 +99,6 @@ class _CreatePageState extends State<CreatePage> {
     }
   }
 
-  /// Writes the captured QR to a temp file and returns its path.
-  /// Old temp QR files are cleaned up first so they don't pile up.
   Future<String?> _saveQrToTempFile() async {
     final bytes = await _captureQrImage();
     if (bytes == null) return null;
@@ -128,9 +121,7 @@ class _CreatePageState extends State<CreatePage> {
           await entity.delete();
         }
       }
-    } catch (_) {
-      // Cleanup is best-effort; never block the export on it.
-    }
+    } catch (_) {}
   }
 
   void _showSnack(String message) {
@@ -386,42 +377,73 @@ class _CreatePageState extends State<CreatePage> {
 
   Widget _buildGrid() {
     return GridView.builder(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
+      physics: const BouncingScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.85,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.9,
       ),
       itemCount: _qrTypes.length,
       itemBuilder: (context, i) {
         final t = _qrTypes[i];
-        return InkWell(
-          onTap: () => setState(() => _selectedType = t['name'] as String),
-          child: Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+        final Color itemColor = t['color'] as Color? ?? Colors.indigo;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.08),
+              width: 1,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(t['icon'] as IconData, color: Colors.deepPurple, size: 28),
-                const SizedBox(height: 6),
-                Text(
-                  t['name'] as String,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => setState(() => _selectedType = t['name'] as String),
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: itemColor.withOpacity(0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        t['icon'] as IconData,
+                        color: itemColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      t['name'] as String,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      t['cat'] as String,
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: Colors.grey.shade400,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  t['cat'] as String,
-                  style: const TextStyle(fontSize: 8, color: Colors.grey),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -431,73 +453,135 @@ class _CreatePageState extends State<CreatePage> {
 
   Widget _buildForm() {
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           ..._buildFields(),
-          const SizedBox(height: 25),
-          ElevatedButton(
-            onPressed: _generateQR,
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            height: 52,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF6366F1).withOpacity(0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Text('Generate & Save to History'),
+            child: ElevatedButton(
+              onPressed: _generateQR,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text(
+                'Generate & Save to History',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ),
           if (_qrData.isNotEmpty) ...[
-            const SizedBox(height: 30),
-
-            // The RepaintBoundary is what gets captured. Everything inside it
-            // (padding + white background) ends up in the exported PNG.
+            const SizedBox(height: 35),
             RepaintBoundary(
               key: _qrKey,
               child: Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black12, blurRadius: 10),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF6366F1).withOpacity(0.25),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
                   ],
                 ),
                 child: QrImageView(
                   data: _qrData,
                   version: QrVersions.auto,
-                  size: 200.0,
+                  size: 210.0,
                   backgroundColor: Colors.white,
                 ),
               ),
             ),
-
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             if (_busy)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
-                child: SizedBox(
-                  height: 24,
-                  width: 24,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+                child: CircularProgressIndicator(),
               )
             else
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.share),
+                  _buildActionButton(
+                    icon: Icons.share_rounded,
+                    label: 'Share',
                     onPressed: _shareQr,
-                    tooltip: 'Share QR',
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.save_alt),
+                  const SizedBox(width: 16),
+                  _buildActionButton(
+                    icon: Icons.save_alt_rounded,
+                    label: 'Save Gallery',
                     onPressed: _saveQrToGallery,
-                    tooltip: 'Save to Gallery',
                   ),
                 ],
               ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 20, color: const Color(0xFF818CF8)),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -516,18 +600,21 @@ class _CreatePageState extends State<CreatePage> {
     }) {
       fields.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 15),
+          padding: const EdgeInsets.only(bottom: 16),
           child: TextField(
             controller: controller,
             readOnly: readOnly,
             onTap: onTap,
+            style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
               labelText: label,
               hintText: hint,
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              prefixIcon: icon != null ? Icon(icon) : null,
-              suffixIcon: isDateTime ? const Icon(Icons.calendar_today) : null,
+              prefixIcon: icon != null
+                  ? Icon(icon, color: const Color(0xFF818CF8))
+                  : null,
+              suffixIcon: isDateTime
+                  ? const Icon(Icons.calendar_today, color: Color(0xFF818CF8))
+                  : null,
             ),
           ),
         ),
@@ -540,13 +627,17 @@ class _CreatePageState extends State<CreatePage> {
     ) {
       fields.add(
         Padding(
-          padding: const EdgeInsets.only(bottom: 15),
-          child: ElevatedButton.icon(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: OutlinedButton.icon(
             onPressed: () => _getCurrentLocation(lat, lng),
-            icon: const Icon(Icons.my_location),
+            icon: const Icon(Icons.my_location, color: Color(0xFF818CF8)),
             label: const Text('Get Current Location'),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 40),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 48),
+              side: const BorderSide(color: Color(0xFF6366F1)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
           ),
         ),
@@ -555,21 +646,21 @@ class _CreatePageState extends State<CreatePage> {
 
     switch (_selectedType) {
       case 'Location':
-        addField(_c1, 'Latitude', icon: Icons.map, hint: 'e.g. 6.9271');
-        addField(_c2, 'Longitude', icon: Icons.map, hint: 'e.g. 79.8612');
+        addField(_c1, 'Latitude', icon: Icons.map_rounded, hint: 'e.g. 6.9271');
+        addField(_c2, 'Longitude', icon: Icons.map_rounded, hint: 'e.g. 79.8612');
         addLocationButton(_c1, _c2);
         break;
       case 'Event':
-        addField(_c1, 'Event Title', icon: Icons.title);
-        addField(_c2, 'Description', icon: Icons.description);
-        addField(_c3, 'Location Name', icon: Icons.location_on);
-        addField(_c4, 'Latitude', icon: Icons.map, hint: 'Optional');
-        addField(_c5, 'Longitude', icon: Icons.map, hint: 'Optional');
+        addField(_c1, 'Event Title', icon: Icons.title_rounded);
+        addField(_c2, 'Description', icon: Icons.description_rounded);
+        addField(_c3, 'Location Name', icon: Icons.location_on_rounded);
+        addField(_c4, 'Latitude', icon: Icons.map_rounded, hint: 'Optional');
+        addField(_c5, 'Longitude', icon: Icons.map_rounded, hint: 'Optional');
         addLocationButton(_c4, _c5);
         addField(
           _c6,
           'Start Date/Time',
-          icon: Icons.calendar_today,
+          icon: Icons.calendar_today_rounded,
           readOnly: true,
           isDateTime: true,
           onTap: () => _pickDateTime(_c6),
@@ -577,37 +668,37 @@ class _CreatePageState extends State<CreatePage> {
         addField(
           _c7,
           'End Date/Time',
-          icon: Icons.calendar_today,
+          icon: Icons.calendar_today_rounded,
           readOnly: true,
           isDateTime: true,
           onTap: () => _pickDateTime(_c7),
         );
         break;
       case 'Email':
-        addField(_c1, 'Email Address', icon: Icons.email);
-        addField(_c2, 'Subject', icon: Icons.subject);
-        addField(_c3, 'Body', icon: Icons.message);
+        addField(_c1, 'Email Address', icon: Icons.email_rounded);
+        addField(_c2, 'Subject', icon: Icons.subject_rounded);
+        addField(_c3, 'Body', icon: Icons.message_rounded);
         break;
       case 'vCard':
-        addField(_c1, 'Full Name', icon: Icons.person);
-        addField(_c2, 'Phone Number', icon: Icons.phone);
-        addField(_c3, 'Email', icon: Icons.email);
-        addField(_c4, 'Address', icon: Icons.home);
-        addField(_c5, 'Company', icon: Icons.business);
+        addField(_c1, 'Full Name', icon: Icons.person_rounded);
+        addField(_c2, 'Phone Number', icon: Icons.phone_rounded);
+        addField(_c3, 'Email', icon: Icons.email_rounded);
+        addField(_c4, 'Address', icon: Icons.home_rounded);
+        addField(_c5, 'Company', icon: Icons.business_rounded);
         break;
       case 'Wi-Fi':
-        addField(_c1, 'Network Name (SSID)', icon: Icons.wifi);
-        addField(_c2, 'Password', icon: Icons.lock);
+        addField(_c1, 'Network Name (SSID)', icon: Icons.wifi_rounded);
+        addField(_c2, 'Password', icon: Icons.lock_rounded);
         break;
       case 'SMS':
-        addField(_c1, 'Phone Number', icon: Icons.phone);
-        addField(_c2, 'Message', icon: Icons.message);
+        addField(_c1, 'Phone Number', icon: Icons.phone_rounded);
+        addField(_c2, 'Message', icon: Icons.message_rounded);
         break;
       case 'UPI':
-        addField(_c1, 'Payee UPI ID', icon: Icons.payment);
-        addField(_c2, 'Payee Name', icon: Icons.person);
-        addField(_c3, 'Amount', icon: Icons.money);
-        addField(_c4, 'Note', icon: Icons.note);
+        addField(_c1, 'Payee UPI ID', icon: Icons.payment_rounded);
+        addField(_c2, 'Payee Name', icon: Icons.person_rounded);
+        addField(_c3, 'Amount', icon: Icons.money_rounded);
+        addField(_c4, 'Note', icon: Icons.note_rounded);
         break;
       default:
         addField(
@@ -615,7 +706,7 @@ class _CreatePageState extends State<CreatePage> {
           _getLabel1(),
           icon: _qrTypes.firstWhere(
             (e) => e['name'] == _selectedType,
-            orElse: () => {'icon': Icons.text_fields},
+            orElse: () => {'icon': Icons.text_fields_rounded},
           )['icon'] as IconData,
         );
     }
