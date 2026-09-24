@@ -17,7 +17,10 @@ Version: 1.0.0 (Build 1)
 # Build Info
 Build Type: Release App Bundle (AAB)
 Output File: publish/qrtoolkit-release.aab
-Build Command: flutter build appbundle --release
+Build Command: flutter build appbundle --release --android-skip-build-dependency-validation
+compileSdk: 37
+targetSdk: 37
+NDK Version: 28.2.13676358
 
 # Notes
 # 1. Never commit the keystore or passwords to version control
