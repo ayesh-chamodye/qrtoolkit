@@ -624,6 +624,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
+  qr_code_scanner_plus:
+    dependency: "direct main"
+    description:
+      name: qr_code_scanner_plus
+      sha256: "166b128820cb6592eacd579a1d6c538aa6d9e8804636b787b694c4e96e6f9812"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   qr_flutter:
     dependency: "direct main"
     description:
